@@ -247,7 +247,7 @@ chrome.webRequest.onHeadersReceived.addListener(
         })
 
         const messages = []
-        const config = {loader_config: {trustKey: "1"}, info: {beacon:"staging-bam-cell.nr-data.net",errorBeacon:"staging-bam-cell.nr-data.net",sa:1}}
+        const config = {loader_config: {trustKey: "1"}, info: {beacon:"staging-bam-cell.nr-data.net",errorBeacon:"staging-bam-cell.nr-data.net",sa:1}, init:{}}
         Promise.all([
             getLocalConfig(config, 'accountID'),
             getLocalConfig(config, 'agentID'),
@@ -258,9 +258,16 @@ chrome.webRequest.onHeadersReceived.addListener(
             getLocalConfig(config, 'beacon', true, true, 'staging-bam-cell.nr-data.net'),
             getLocalConfig(config, 'errorBeacon', true, true, 'staging-bam-cell.nr-data.net'),
             getLocalConfig(config, 'version', false, false, 'current'),
-            getLocalConfig(config, 'copyPaste', false, false)
-        ]).then(({4: nrLoaderType, 5: customLoaderUrl, 8: version, 9: copyPaste}) => {
+            getLocalConfig(config, 'copyPaste', false, false),
+            getLocalStorage(`${storageKey}_nrCustomConfig`)
+        ]).then(({4: nrLoaderType, 5: customLoaderUrl, 8: version, 9: copyPaste, 10: nrCustomConfig}) => {
 
+            if (nrCustomConfig) {
+                const cc = JSON5.parse(nrCustomConfig)
+                config.loader_config = {...config.loader_config, ...cc.loader_config || {}}
+                config.info = {...config.info, ...cc.info || {}}
+                config.init = {...config.init, ...cc.init || {}}
+            }
             // prepend(htmlDoc, `window.NREUM=window.NREUM||{};NREUM.init = {obfuscate: [{regex: 123, replacement: "OBFUSCATED"}] }`, null)
             if (nrLoaderType.toLowerCase() === 'copy-paste' && copyPaste){
                 messages.push({message: `Injecting copy/paste snippet`, data: null})
@@ -281,7 +288,7 @@ chrome.webRequest.onHeadersReceived.addListener(
                 // prepend(htmlDoc, debugListener("pvtAdded"))
 
                 messages.push({message: `appending NREUM data`, data: config})
-                const configString = `window.NREUM=window.NREUM||{};NREUM.loader_config=${JSON.stringify(config.loader_config)};NREUM.info=${JSON.stringify(config.info)}`
+                const configString = `window.NREUM=window.NREUM||{};NREUM.init=${JSON.stringify(config.init)};NREUM.loader_config=${JSON.stringify(config.loader_config)};NREUM.info=${JSON.stringify(config.info)}`
                 prepend(htmlDoc, configString, null)
 
                 messages.push({message:`injecting\n${loaderUrl}`, data: null})

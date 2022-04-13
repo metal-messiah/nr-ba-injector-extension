@@ -12,6 +12,13 @@ const messageTypes = {
     trackedTabsChange: 'trackedTabsChange'
 }
 
+const defaultCustomConfig = `{ info: {}, loader_config: {}, init: {} }`
+
+const isValidCustomConfig = config => {
+    if (!config) return false
+    return config.includes('info') && config.includes('loader_config') && config.includes('init')
+}
+
 let currentTab;
 chrome.runtime.sendMessage({type: messageTypes.currentTab}, tab => {
     currentTab = tab
@@ -148,6 +155,8 @@ window.addEventListener('load', async () => {
     setInputValue("#version", await getLocalStorage('version'))
     setInputValue("#customLoaderUrl", await getLocalStorage('customLoaderUrl') || null)
     setInputValue("#copyPaste", await getLocalStorage('copyPaste') || null)
+    
+    setInputValue("#nrCustomConfig", await getLocalStorage('nrCustomConfig') || defaultCustomConfig)
 
     const nrLoaderType = await getLocalStorage('nrLoaderType') || 'SPA'
     setInputValue("#nrLoaderType", nrLoaderType)
@@ -172,9 +181,18 @@ window.addEventListener('load', async () => {
         })
     })
 
-    document.querySelectorAll('input[type="text"], textarea').forEach(input => {
+    document.querySelectorAll('input[type="text"]').forEach(input => {
         input.addEventListener('input', (val) => {
             const {id, value} = val.target
+            setLocalStorage({key: id, val: (value || "").trim().replace(/\r?\n|\r/g, '')})
+            showHelper("Reload any running pages to see changes")
+        })
+    })
+
+    document.querySelectorAll('textarea').forEach(input => {
+        input.addEventListener('input', (val) => {
+            const {id, value} = val.target
+            console.log(id, "wants to save", value)
             setLocalStorage({key: id, val: (value || "").trim().replace(/\r?\n|\r/g, '')})
             showHelper("Reload any running pages to see changes")
         })

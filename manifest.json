@@ -15,7 +15,7 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["scripts/inject.js"],
+      "js": ["scripts/json5.js","scripts/inject.js"],
       "run_at":"document_start",
       "all_frames": true
     } 
@@ -26,7 +26,7 @@
       "https://kit.fontawesome.com/7b497df91f.js"
   ],
   "background": {
-    "scripts": ["background/base64.js", "background/index.js", "background/nr-querypack.bundle.js"],
+    "scripts": ["background/json5.js", "background/base64.js", "background/index.js", "background/nr-querypack.bundle.js"],
     "persistent": true
   }
 }
